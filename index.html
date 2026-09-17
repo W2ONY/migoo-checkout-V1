@@ -38,7 +38,7 @@ body{
   font-family:var(--font);
   background:#DCDEE3;
   min-height:100vh;
-  display:flex; align-items:flex-start; justify-content:center;
+  display:flex; align-items:flex-start; justify-content:center; justify-content:safe center;   /* narrow window: start-align instead of clipping the left column */
   gap:28px; padding:32px 24px;
 }
 
@@ -754,7 +754,7 @@ body{
 .ps-card.on{border-color:var(--blue)}
 .ps-row.setup{
   border:1.4px solid #EE4D2D; background:#FFF7F4; border-radius:10px;
-  padding:12px 10px; margin:4px 0 6px; border-bottom:1.4px solid #EE4D2D;
+  padding:12px 10px 12px 10.6px; margin:4px -10px 6px; border-bottom:1.4px solid #EE4D2D;   /* -10 + 1.4 + 10.6 = the 2px the plain rows use */
 }
 .ps-row.setup.card{ border-color:var(--blue); background:var(--blue-wash); border-bottom-color:var(--blue) }
 .as-empty{background:#fff; border-radius:14px; padding:26px 20px 20px; text-align:center; margin-bottom:10px}
@@ -981,6 +981,18 @@ body{
 }
 .devbar .seg button.on{background:var(--blue); border-color:var(--blue); color:#fff}
 .devbar .seg button:disabled{opacity:.38; cursor:not-allowed}
+/* dev hint bubble: sits beside the phone (never over it), pointing at the shell */
+.devhint{
+  display:none; flex:0 0 224px; width:224px; align-self:flex-start; margin-top:150px; position:relative;
+  background:#fff; border-radius:14px; padding:14px 16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12); font-size:12.5px; line-height:1.5; color:var(--ink-2);
+  animation:dhIn .3s ease both;
+}
+.devhint.on{display:block}
+@keyframes dhIn{from{opacity:0; transform:translateX(8px)} to{opacity:1; transform:none}}
+.devhint::after{content:''; position:absolute; right:-8px; top:26px; border:8px solid transparent; border-right:0; border-left-color:#fff}
+.devhint .dh-tag{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#0BA37F; background:#E6F6F1; border-radius:6px; padding:2px 7px; margin-bottom:8px}
+.devhint b{color:var(--ink)}
 .devbar .steps{display:flex; flex-direction:column; gap:5px; margin-top:8px}
 .devbar .steps button{
   border:1px solid var(--line-2); background:#fff; border-radius:8px;
@@ -998,6 +1010,7 @@ body{
 </head>
 <body>
 
+<div class="devhint" id="devHint"><span class="dh-tag">Monee · US</span><div id="devHintText"></div></div>
 <div class="phone" id="phone">
   <!-- status bar -->
   <div class="statusbar">
@@ -1848,9 +1861,9 @@ function payLogo(kind, w=34, h=24){
     case 'mastercard': return tile('#fff','#EB001B',BRAND.mastercard,20);
     case 'applepay':   return tile('#fff','#000',BRAND.applepay,22);
     case 'cashapp':    return tile('#00D632','#fff',BRAND.cashapp);
-    case 'link':       return tile('#00D66F','#003025','M9 5.5l7 6.5-7 6.5',12,true);
-    case 'bank':       return tile('#fff','#3C3C43','M3 9.5L12 4l9 5.5V11H3zM5 12.5h2.6V18H5zM10.7 12.5h2.6V18h-2.6zM16.4 12.5H19V18h-2.6zM3 19h18v2H3z',18);
-    case 'newcard':    return tile('#fff','#5C6370','M2 5h20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm0 3.4h20V11H2zM4 14.6h7V16H4z',18);
+    case 'link':       return `<svg width="${w}" height="${h}" viewBox="0 0 34 24"><rect width="34" height="24" rx="5" fill="#00D66F"/><text x="17" y="16.4" text-anchor="middle" font-family="-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" font-weight="800" letter-spacing="-.3" fill="#011E0F">link</text></svg>`;
+    case 'bank':       return `<svg width="${w}" height="${h}" viewBox="0 0 34 24"><rect width="34" height="24" rx="5" fill="#fff"/><rect x=".5" y=".5" width="33" height="23" rx="4.5" fill="none" stroke="#E5E5EA"/><svg x="7" y="2" width="20" height="20" viewBox="0 0 24 24"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" stroke="#3C3C43" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></svg>`;
+    case 'newcard':    return `<svg width="${w}" height="${h}" viewBox="0 0 34 24"><rect width="34" height="24" rx="5" fill="#fff"/><rect x=".5" y=".5" width="33" height="23" rx="4.5" fill="none" stroke="#E5E5EA"/><svg x="7" y="2" width="20" height="20" viewBox="0 0 24 24"><path d="M3 8a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zM3 10h18M7 15h.01M11 15h2" stroke="#3C3C43" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></svg>`;
     case 'spaylater':  return tile('#EE4D2D','#fff','M12 3a9 9 0 1 1 0 18 a9 9 0 0 1 0-18zm0 3.4v5.2l4 2.4',15,true);
     case 'seabank':    return tile('#F97316','#fff','M3 9.5c3-3.4 6 3.4 9 0s6 3.4 9 0M3 15c3-3.4 6 3.4 9 0s6 3.4 9 0',16,true);
     case 'qris':       return tile('#fff','#191919','M3 3h8v8H3zM5 5v4h4V5zM13 3h8v8h-8zM15 5v4h4V5zM3 13h8v8H3zM5 15v4h4v-4zM13 13h4v4h-4zM18 17h3v4h-4v-3h1z',16);
@@ -3351,21 +3364,39 @@ function armPhone(){
     }, 600);
   });
 }
+function completeTypedAddr(){
+  acceptAddr(TYPED_ADDR, 'typed');
+  aiMsg([{t:'p', text:`✅ That’s complete — shipping to ${TYPED_ADDR.address.replace(', USA','')}, courier can reach you at ${TYPED_ADDR.phone}.`}]);
+  then(()=>next(), 900);
+}
 function armNewAddr(round){
   const text = round === 'full' ? NEW_ADDR_FULL : round === 0 ? NEW_ADDR_LINE_1 : NEW_ADDR_LINE_2;
   setPending(text, ()=>{
+    removeFollowups();                               // typing a number retires the "use the last one" chip
     userMsg(text);
     state.addrDraft = state.addrDraft ? state.addrDraft + ', ' + text : text;
     const gaps = addrGaps(state.addrDraft);
     after(()=>{
-      if(gaps.length){                                 // something is missing — ask for just that
+      if(gaps.length === 1 && /phone/.test(gaps[0])){
+        // only the phone is missing: offer the number on file, or take a new one
+        aiMsg([{t:'p', text:`Almost there — I still need a phone number for the courier. You can use the one saved last time, ${PHONE_LINE}, or just send me a new one.`}]);
+        after(()=>{
+          followupMsg([{label:'Use the last number', onTap:()=>{
+            setPending(null);
+            userMsg('Use the last number');
+            state.addrDraft += ', ' + PHONE_LINE;
+            after(()=>completeTypedAddr(), 600);
+          }}]);
+          armNewAddr(1);                             // …or a new number typed in the composer
+        }, 500);
+        return;
+      }
+      if(gaps.length){                                 // something else is missing — ask for just that
         aiMsg([{t:'p', text:`Almost there — I still need ${gaps.join(' and ')}.`}]);
         after(()=>armNewAddr(1), 650);
         return;
       }
-      acceptAddr(TYPED_ADDR, 'typed');
-      aiMsg([{t:'p', text:`✅ That’s complete — shipping to ${TYPED_ADDR.address.replace(', USA','')}, courier can reach you at ${TYPED_ADDR.phone}.`}]);
-      then(()=>next(), 900);
+      completeTypedAddr();
     }, 650);
   });
 }
@@ -3437,6 +3468,9 @@ const S_CARD = { label:'Order card · pay CTA', run(){
       $('#taskBadge').classList.add('on');
       if(!state.addr) acceptAddr(proposedAddr(), state.addrMode === 'nogps' ? 'typed' : state.addrMode);
       issueOrderCard();
+      if(state.region === 'us' && state.supplier === 'monee'){
+        showDevHint('In the US, Monee doesn’t process cards itself — it plugs in a <b>third-party PSP such as Stripe</b>. This order’s <b>Pay now</b> runs on that PSP rail, so the card form, SMS code, Migoo PIN and Face ID here are the same as on the Stripe path.');
+      }
   }};
 const S_PAID = { label:'Payment success (chat)', run(){
       closePaySheet();
@@ -3624,7 +3658,10 @@ function curFlow(){ return state.agentic ? FLOWS[state.userType] : FLOW_NOAG; }
               Face ID (PIN-confirmed) + Monee Payment Method sheet; 'shopify' = Shop Pay,
               card saved once and every payment verified with an SMS code
    platform — 'migoo' standalone shell; 'shopee' migoo inside the Shopee frame */
-function standalone(){ return state.supplier !== 'monee'; }   // card-style suppliers
+/* Monee is a wallet only outside the US (Face ID registration sheet, Monee PIN, Monee
+   Payment Method sheet); in the US it processes cards exactly like Stripe */
+function moneeWallet(){ return state.supplier === 'monee' && state.region !== 'us'; }
+function standalone(){ return !moneeWallet(); }                 // card-style checkout
 function shopPay(){ return state.supplier === 'shopify'; }
 function inShopee(){ return state.platform === 'shopee'; }
 function usRegion(){ return state.region === 'us'; }
@@ -3647,6 +3684,7 @@ function next(){
 
 function clearShell(){
   clearTimers();
+  hideDevHint();
   stopOrderCountdown();
   thread.innerHTML=''; setPending(null);
   $('#taskBadge').classList.remove('on');
@@ -3679,7 +3717,7 @@ function clearShell(){
   state.qbKey = 'bag2'; state.qbPrice = null;
   state.paying = false;
   state.addr = null;
-  state.pay = state.supplier === 'monee'
+  state.pay = moneeWallet()
     ? (newUser() ? {id:'sp-new', logo:'monee', label:'Set up Monee', payName:'Monee'}
                  : {id:'sp6789', logo:'monee', label:'···· 6789', payName:'Monee'})
     : shopPay()
@@ -3687,7 +3725,7 @@ function clearShell(){
                  : {id:'sh6789', logo:'shoppay', label:'···· 6789', payName:'Shop Pay ···· 6789'})
     : (newUser() ? {id:'st-none', logo:'newcard', label:'Add card', payName:'Card'}
                  : {id:'st6789', logo:'mastercard', label:'···· 6789', payName:'Mastercard ···· 6789'});
-  state.savedSel = newUser() ? null : state.supplier === 'monee' ? 'sp6789' : shopPay() ? 'sh6789' : 'st6789'; state.psSel = 'saved';
+  state.savedSel = newUser() ? null : moneeWallet() ? 'sp6789' : shopPay() ? 'sh6789' : 'st6789'; state.psSel = 'saved';
   state.addrDraft = '';
   state.addrEditing = false;
   state.addrSent = false;
@@ -3699,11 +3737,17 @@ function clearShell(){
   closeCheckout();
   document.querySelector('.phone').classList.toggle('assistant', inShopee()); state.pinMode = null; state.pinBuf = '';
   PAY_METHODS = newUser() ? []
-              : state.supplier === 'monee' ? INIT_METHODS.map(m=>({...m}))
+              : moneeWallet() ? INIT_METHODS.map(m=>({...m}))
               : shopPay() ? SHOP_METHODS.map(m=>({...m}))
               : STRIPE_METHODS.map(m=>({...m}));
 }
 
+/* dev hint: an extra column to the left of the phone, shown only on the paths that need it */
+function showDevHint(html){
+  $('#devHintText').innerHTML = html;
+  $('#devHint').classList.add('on');
+}
+function hideDevHint(){ $('#devHint').classList.remove('on'); }
 function reset(){
   clearShell();
   state.step = 0;
