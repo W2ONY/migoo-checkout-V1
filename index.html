@@ -1009,6 +1009,8 @@ body{
 .devhint .dh-tag{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#0BA37F; background:#E6F6F1; border-radius:6px; padding:2px 7px; margin-bottom:8px}
 .devhint .dh-tag.orange{color:#D8431F; background:#FDEEE9}
 .devhint b{color:var(--ink)}
+.devhint p{margin:0 0 9px}
+.devhint p:last-child{margin-bottom:0}
 .devbar .steps{display:flex; flex-direction:column; gap:5px; margin-top:8px}
 .devbar .steps button{
   border:1px solid var(--line-2); background:#fff; border-radius:8px;
@@ -3514,7 +3516,8 @@ const S_PAID = { label:'Payment success (chat)', run(){
       if(!inShopee() && state.orderStore === 'Shopee'){
         hideDevHint();               // the payment note has done its job — only one bubble at a time
         showDevHint('link-shopee', 'Migoo · Shopee order',
-          'This Shopee item was bought from the <b>Migoo</b> channel, so the order needs a Shopee account behind it: either the user <b>links their Shopee account</b>, or Migoo <b>silently registers one</b> for them once the order is placed.', 'orange');
+          '<p>This Shopee item was bought from the <b>Migoo</b> channel, so the order needs a Shopee account behind it: either the user <b>links their Shopee account</b>, or Migoo <b>silently registers one</b> for them once the order is placed.</p>'
+        + '<p>If Shopee doesn’t support <b>guest checkout</b>, there is no way around this — not even through the API. The API route can only <b>create an account for the user</b>, then bind it underneath and place the order through that account.</p>', 'orange');
       }
       if(!onCardSetup()) aiMsg([{t:'p', text:`✅ Payment successful! ${orderAmounts().total} paid with ${state.pay.payName}.`}]);
       then(()=>showMail(), 600);
