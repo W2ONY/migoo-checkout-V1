@@ -1284,6 +1284,11 @@ body{
 <!-- ============ dev bar ============ -->
 <div class="devcol">
 <div class="devbar">
+  <h4>Agentic checkout</h4>
+  <div class="seg addr3">
+    <button data-agentic="yes" class="on">Supported</button>
+    <button data-agentic="no">Not supported</button>
+  </div>
   <h4>Region</h4>
   <div class="seg">
     <button data-region="us" class="on">US</button>
@@ -1300,11 +1305,6 @@ body{
     <button data-platform="migoo" class="on">Migoo</button>
     <button data-platform="shopee">In Shopee</button>
   </div>
-  <h4>Agentic checkout</h4>
-  <div class="seg addr3">
-    <button data-agentic="yes" class="on">Supported</button>
-    <button data-agentic="no">Not supported</button>
-  </div>
 </div>
 <div class="devbar">
   <h4>User</h4>
@@ -1314,9 +1314,9 @@ body{
   </div>
   <h4>Address</h4>
   <div class="seg addr3">
-    <button data-addr="none" class="on" data-tip="No address on file. Migoo uses GPS to get the user’s current location, but the phone number is still missing (the email comes from the Migoo account).">No address · GPS</button>
+    <button data-addr="memory" class="on" data-tip="The user’s complete details are already in memory and can be filled in directly.">In memory</button>
+    <button data-addr="none" data-tip="No address on file. Migoo uses GPS to get the user’s current location, but the phone number is still missing (the email comes from the Migoo account).">No address · GPS</button>
     <button data-addr="nogps" data-tip="Migoo has no information about the user at all — no address, no location, no phone number.">No address · no GPS</button>
-    <button data-addr="memory" data-tip="The user’s complete details are already in memory and can be filled in directly.">In memory</button>
   </div>
   <div class="devtip" id="devTip"></div>
 </div>
@@ -3267,7 +3267,7 @@ let state = { step:0, timers:[], entry:null, orderKey:'bag3', addr:null,
               savedSel:'sp6789', psSel:'saved', psView:'main',
               spEnrolled:false, pinMode:null, pinBuf:'', userType:'stnew', addrSent:false,
               orderTimer:null, orderDeadline:0, orderStore:'Shopee', orderPrice:null,
-              ckProt:false, ckView:'form', picked:{}, defaultAddr:null, addrMode:'none', addrSource:null, region:'us', supplier:'stripe', platform:'migoo', agentic:true };
+              ckProt:false, ckView:'form', picked:{}, defaultAddr:null, addrMode:'memory', addrSource:null, region:'us', supplier:'stripe', platform:'migoo', agentic:true };
 /* content delay — when jumping steps it fires immediately so the step's
    full content is on screen */
 function after(fn, ms){
@@ -3512,6 +3512,7 @@ const S_PAID = { label:'Payment success (chat)', run(){
       }
       flipToReceipt();             // card becomes the receipt (Purchase Complete + Customer Support)
       if(!inShopee() && state.orderStore === 'Shopee'){
+        hideDevHint();               // the payment note has done its job — only one bubble at a time
         showDevHint('link-shopee', 'Migoo · Shopee order',
           'This Shopee item was bought from the <b>Migoo</b> channel, so the order needs a Shopee account behind it: either the user <b>links their Shopee account</b>, or Migoo <b>silently registers one</b> for them once the order is placed.', 'orange');
       }
@@ -3861,8 +3862,8 @@ document.querySelectorAll('.devbar .seg button[data-user]').forEach(b=>{
     document.querySelectorAll('.devbar .seg button[data-user]').forEach(n=>n.classList.remove('on'));
     b.classList.add('on');
     state.userType = b.dataset.user;
-    // a user who has paid before has an address in memory by default; one who never paid has none
-    setAddrMode(b.dataset.user === 'stripe' ? 'memory' : 'none');
+    // memory is the default address path for every user; switching the user puts it back there
+    setAddrMode('memory');
     buildStepList();
     reset();
   });
