@@ -970,6 +970,18 @@ body{
   padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.1);
   font-size:13px; color:var(--ink);
 }
+.devcol{flex:0 0 auto; display:flex; flex-direction:column; gap:14px}
+.devbar{position:relative}
+.devbar.devacts .restart:first-child{margin-top:0}
+/* hover explanation for the User / Address options: drops in right under the hovered option */
+.devtip{
+  position:absolute; left:12px; right:12px; z-index:20; background:#1C1C1E; color:#fff;
+  font-size:11.5px; line-height:1.5; font-weight:400; border-radius:10px; padding:9px 11px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; pointer-events:none;
+  transform:translateY(-4px); transition:opacity .15s ease, transform .15s ease;
+}
+.devtip.on{opacity:1; transform:none}
+.devtip::before{content:''; position:absolute; top:-6px; left:var(--ax,24px); margin-left:-6px; border:6px solid transparent; border-top:0; border-bottom-color:#1C1C1E}
 .devbar h4{margin:0 0 4px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
 .devbar h4:not(:first-child){margin-top:18px}
 .devbar .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px}
@@ -1266,6 +1278,7 @@ body{
 </div>
 
 <!-- ============ dev bar ============ -->
+<div class="devcol">
 <div class="devbar">
   <h4>Region</h4>
   <div class="seg">
@@ -1288,22 +1301,26 @@ body{
     <button data-agentic="yes" class="on">Supported</button>
     <button data-agentic="no">Not supported</button>
   </div>
+</div>
+<div class="devbar">
   <h4>User</h4>
   <div class="seg">
-    <button data-user="stnew" class="on">Never paid</button>
-    <button data-user="stripe">Paid before</button>
+    <button data-user="stnew" class="on" data-tip="Has never made a payment in Migoo, so there is no payment information on file.">Never paid</button>
+    <button data-user="stripe" data-tip="Has paid in Migoo before, so payment information is on file — but not necessarily an address (the user may have deleted it).">Paid before</button>
   </div>
   <h4>Address</h4>
   <div class="seg addr3">
-    <button data-addr="none" class="on">No address · GPS</button>
-    <button data-addr="nogps">No address · no GPS</button>
-    <button data-addr="memory">In memory</button>
+    <button data-addr="none" class="on" data-tip="No address on file. Migoo uses GPS to get the user’s current location, but the phone number is still missing (the email comes from the Migoo account).">No address · GPS</button>
+    <button data-addr="nogps" data-tip="Migoo has no information about the user at all — no address, no location, no phone number.">No address · no GPS</button>
+    <button data-addr="memory" data-tip="The user’s complete details are already in memory and can be filled in directly.">In memory</button>
   </div>
-  <h4>Steps</h4>
-  <div class="steps" id="stepList"></div>
+  <div class="devtip" id="devTip"></div>
+</div>
+<div class="devbar devacts">
   <button class="restart" id="restart">↻ Restart</button>
   <button class="restart" id="openPdpBtn" style="margin-top:8px">Open product page</button>
   <button class="restart" id="expireBtn" style="margin-top:8px">Expire order (5s)</button>
+</div>
 </div>
 
 <script>
@@ -1872,8 +1889,8 @@ function payLogo(kind, w=34, h=24){
 }
 /* saved instruments; New card adds to this list. Reset on Restart. */
 const INIT_METHODS = [
-  {id:'sp6789',   logo:'monee', payName:'Monee', label:'···· 6789',
-   manage:{name:'Jack Tate', email:'jack.tate@example.com', acct:'Monee Wallet ···· 6789'}},
+  {id:'sp6789',   logo:'shopeepay', payName:'ShopeePay', label:'···· 6789',
+   manage:{name:'Jack Tate', email:'jack.tate@example.com', acct:'ShopeePay Wallet ···· 6789'}},
   {id:'visa4242', logo:'visa', payName:'Visa ···· 4242', label:'···· 4242',
    manage:{name:'Jack Tate', email:'jack.tate@example.com', acct:'Visa Credit ···· 4242'}}
 ];
@@ -1918,8 +1935,8 @@ function renderPS(view){
       </div>` : `
       <div class="ps-row setup" data-act="more">
         <div class="ps-radio${state.psSel==='saved'?' on':''}"></div>
-        <div class="ps-logo">${payLogo('monee')}</div>
-        <div class="ps-name">Monee<div class="ps-sub" style="color:#0BA37F">Set up required — add your Monee details</div></div>
+        <div class="ps-logo">${payLogo('shopeepay')}</div>
+        <div class="ps-name">ShopeePay<div class="ps-sub" style="color:#EE4D2D">Set up required — add your ShopeePay details</div></div>
         <div class="ps-more" data-act="more">View more ›</div>
       </div>`;
     body.innerHTML = `
@@ -1949,11 +1966,11 @@ function renderPS(view){
       </div>
       <button class="ps-cta" data-act="add-card-form">Add card</button>` : `
       <div class="ps-empty">
-        <div class="ic">${payLogo('monee', 56, 40)}</div>
+        <div class="ic">${payLogo('shopeepay', 56, 40)}</div>
         <div class="t">No payment account linked yet</div>
-        <div class="s">Add your Monee details so Migoo can pay for you.</div>
+        <div class="s">Add your ShopeePay details so Migoo can pay for you.</div>
       </div>
-      <button class="ps-cta" data-act="add-sp">Add Monee account</button>`) : PAY_METHODS.map(m=>`
+      <button class="ps-cta" data-act="add-sp">Add ShopeePay account</button>`) : PAY_METHODS.map(m=>`
       <div class="ps-card${m.id===state.savedSel?' on':''}" data-act="pick-card" data-id="${m.id}">
         <div class="ps-logo">${payLogo(m.logo)}</div><span>${esc(m.label)}</span>
       </div>`).join('')}`;
@@ -1978,10 +1995,10 @@ function renderPS(view){
       <div class="ps-head">
         <div class="ps-back" data-act="back-cards">‹</div>
       </div>
-      <div class="ps-title big">Set up Monee</div>
+      <div class="ps-title big">Set up ShopeePay</div>
       <div class="ps-field"><label>Full name</label><div>Jack Tate</div></div>
       <div class="ps-field"><label>Email</label><div>jack.tate@example.com</div></div>
-      <div class="ps-field"><label>Account</label><div>Monee Wallet ···· 6789</div></div>
+      <div class="ps-field"><label>Account</label><div>ShopeePay Wallet ···· 6789</div></div>
       <div class="ps-def on" data-act="toggle-def"><span class="cb"></span>Set as default payment method</div>
       <button class="ps-cta" data-act="save-setup">Save</button>`;
   }
@@ -2069,7 +2086,7 @@ $('#psBody').addEventListener('click', e=>{
     // account bound: register the instrument, then verify phone → set PIN → pay
     if(!PAY_METHODS.some(m=>m.id==='sp6789')) PAY_METHODS.unshift({...INIT_METHODS[0]});
     state.savedSel = 'sp6789'; state.psSel = 'saved';
-    state.pay = {id:'sp6789', logo:'monee', label:'···· 6789', payName:'Monee'};
+    state.pay = {id:'sp6789', logo:'shopeepay', label:'···· 6789', payName:'ShopeePay'};
     const chip = [...document.querySelectorAll('.order-wrap:not(.stale) .pm-chip')].pop();
     if(chip) chip.innerHTML = payLogo('shopeepay',26,18) + '<span>···· 6789</span>';
     closePaySheet();
@@ -2078,9 +2095,11 @@ $('#psBody').addEventListener('click', e=>{
   }
   else if(act==='add-card'){
     if(state.pay.id === 'st-none'){
-      // first card: verify the phone by SMS → set a PIN → offer Face ID; only then is it bound
+      // first card: set a PIN → verify the phone by SMS → register Face ID; only then is it bound
       closePaySheet();                    // 'pay' mode close: releases the countdown + Pay now
-      startCardVerify(shopPay() ? 'shop-otp' : 'card-otp');   // Shop Pay: SMS code only, no PIN
+      state.paying = true;                // chain in flight: countdown frozen, Pay now parked
+      { const ob = window.__orderBtn; if(ob) ob.disabled = true; }
+      openPin('card-pin');
       return;
     }
     if(!PAY_METHODS.some(m=>m.id==='mc4444')){
@@ -2110,17 +2129,16 @@ const FID_ICON = (size, color)=>`<svg width="${size}" height="${size}" viewBox="
 </svg>`;
 
 function openEnrollSheet(){
-  $('#enroll').classList.add('monee');
   $('#enBody').innerHTML = `
-    <div class="fidicon">${FID_ICON(46,'#0BA37F')}</div>
+    <div class="fidicon">${FID_ICON(46,'#EE4D2D')}</div>
     <div class="en-title">Register your Face ID for<br>Agentic Checkout</div>
     <div class="en-sub">You will be prompted to verify with your Face ID whenever Migoo makes a purchase for you.</div>
     <div class="en-seqh">Current Payment Sequence <span class="qm">?</span></div>
     <div class="en-seqsub">Payment for this and all <a>Linked Services</a> will be processed using the sequence below. Change the sequence anytime in <a>Preferred Payment Method</a>.</div>
-    <div class="en-item"><span class="en-n">1</span><div class="ps-logo">${payLogo('monee')}</div><div class="nm">Monee Wallet <span class="amt">($10.00)</span></div></div>
-    <div class="en-item"><span class="en-n">2</span><div class="ps-logo">${payLogo('spaylater')}</div><div class="nm">Monee PayLater <span class="amt">($1,000.00)</span><div class="sub">Buy Now Pay Later at 0% interest</div></div><div class="sw-toggle" id="splToggle"></div></div>
+    <div class="en-item"><span class="en-n">1</span><div class="ps-logo">${payLogo('shopeepay')}</div><div class="nm">ShopeePay <span class="amt">($10.00)</span></div></div>
+    <div class="en-item"><span class="en-n">2</span><div class="ps-logo">${payLogo('spaylater')}</div><div class="nm">SPayLater <span class="amt">($1,000.00)</span><div class="sub">Buy Now Pay Later at 0% interest</div></div><div class="sw-toggle" id="splToggle"></div></div>
     <div class="en-item"><span class="en-n">3</span><div class="ps-logo">${payLogo('seabank')}</div><div class="nm">SeaBank <span class="amt">*0023</span></div></div>
-    <div class="en-terms">By continuing, you agree to the Monee <a>Terms of Service</a> and <a>Privacy Policy</a>. You can unlink Monee from Migoo at any time via your Migoo permissions setting.</div>
+    <div class="en-terms">By continuing, you agree to Shopee <a>Terms of Service</a> and <a>Privacy Policy</a>. You can unlink Shopee from Migoo at any time via your Migoo permissions setting.</div>
     <button class="en-cta" id="enCta">Register Face ID</button>`;
   $('#splToggle').addEventListener('click', e=>e.target.classList.toggle('off'));
   $('#enCta').addEventListener('click', ()=>{
@@ -2135,11 +2153,11 @@ function openEnrollSheet(){
 function completeRegistration(){
   if(!PAY_METHODS.some(m=>m.id==='sp6789')) PAY_METHODS.unshift({...INIT_METHODS[0]});
   state.savedSel = 'sp6789'; state.psSel = 'saved';
-  state.pay = {id:'sp6789', logo:'monee', label:'···· 6789', payName:'Monee'};
+  state.pay = {id:'sp6789', logo:'shopeepay', label:'···· 6789', payName:'ShopeePay'};
   state.spEnrolled = true;
   state.paying = false;
   refreshOrderPay();
-  toast('Face ID registered — Monee ···· 6789 is linked. Tap Pay now to pay.');
+  toast('Face ID registered — ShopeePay ···· 6789 is linked. Tap Pay now to pay.');
 }
 function closeEnrollSheet(){ $('#enroll').classList.remove('on'); }
 
@@ -2151,8 +2169,10 @@ const SMS_CODE = '482913';
 function showSms(){
   $('#smsText').textContent = shopPay()
     ? `Shop Pay: your verification code is ${SMS_CODE}. Don’t share it with anyone.`
+    : moneeWallet()
+    ? `Your ShopeePay verification code is ${SMS_CODE}. Never share this code with anyone.`
     : `Your Migoo verification code is ${SMS_CODE}. It expires in 10 minutes.`;
-  document.querySelector('#smsToast .mt-t').textContent = shopPay() ? 'Shop Pay' : 'Migoo';
+  document.querySelector('#smsToast .mt-t').textContent = shopPay() ? 'Shop Pay' : moneeWallet() ? 'ShopeePay' : 'Migoo';
   $('#smsToast').classList.add('on');
   state.timers.push(setTimeout(hideSms, 4500));
 }
@@ -2180,8 +2200,8 @@ function offerFaceID(){
   $('#enBody').innerHTML = `
     <div class="fidicon">${FID_ICON(46,'#0A66FF')}</div>
     <div class="en-title">Register your Face ID for<br>Agentic Checkout</div>
-    <div class="en-sub">Register now and Migoo will ask for a quick scan whenever it makes a purchase for you. Skip it and purchases are confirmed with your Migoo PIN instead.</div>
-    <div class="en-linked">${payLogo('mastercard',34,24)}<span>Mastercard ···· 4444</span><span class="ok">✓ Linked</span></div>
+    <div class="en-sub">Register now and Migoo will ask for a quick scan whenever it makes a purchase for you. Skip it and purchases are confirmed with your PIN instead.</div>
+    <div class="en-linked">${payLogo(shopPay() ? 'shoppay' : 'mastercard',34,24)}<span>${shopPay() ? 'Shop Pay ···· 4444' : 'Mastercard ···· 4444'}</span><span class="ok">✓ Verified</span></div>
     <div class="en-terms">By continuing, you agree to the Migoo <a>Terms of Service</a> and <a>Privacy Policy</a>. You can change how purchases are verified anytime in Settings.</div>
     <button class="en-cta" id="enCta">Register Face ID</button>
     <button class="en-later" id="enLater">Maybe later</button>`;
@@ -2195,8 +2215,8 @@ function offerFaceID(){
 /* the chain is complete: the card goes onto the order card, Pay now is the user's next tap */
 function finishCardBind(withFaceID){
   state.enrollVariant = null;
-  if(shopPay()){                              // Shop Pay keeps the card; every payment verifies by SMS code
-    state.spEnrolled = true;
+  if(shopPay()){                              // Shop Pay keeps the card; payments verify with Face ID, or the PIN if skipped
+    state.spEnrolled = withFaceID;
     if(!PAY_METHODS.some(m=>m.id==='sh4444')){
       PAY_METHODS.push({id:'sh4444', logo:'shoppay', payName:'Shop Pay ···· 4444', label:'···· 4444',
         manage:{name:'Jack Tate', email:'jack.tate@example.com', acct:'Shop Pay · Mastercard ···· 4444'}});
@@ -2205,7 +2225,8 @@ function finishCardBind(withFaceID){
     state.pay = {id:'sh4444', logo:'shoppay', label:'···· 4444', payName:'Shop Pay ···· 4444'};
     state.paying = false;
     refreshOrderPay();
-    toast('Shop Pay set up — card ···· 4444 saved. Tap Pay now to pay.');
+    toast(withFaceID ? 'Face ID registered — Shop Pay ···· 4444 will verify with a quick scan.'
+                     : 'Shop Pay set up — purchases will be confirmed with your PIN.');
     return;
   }
   state.spEnrolled = withFaceID;
@@ -2226,32 +2247,31 @@ function openPin(mode){
   state.pinMode = mode; state.pinBuf = '';
   $('#pinsheet').classList.toggle('mg', standalone() && !shopPay());
   $('#pinsheet').classList.toggle('shop', shopPay());
-  $('#pinsheet').classList.toggle('monee', !standalone());
-  $('#kbNoteTxt').textContent = shopPay() ? 'Shop Pay Secure Keyboard' : standalone() ? 'Migoo Security Keyboard' : 'Monee Security Keyboard';
+  $('#kbNoteTxt').textContent = shopPay() ? 'Shop Pay Secure Keyboard' : standalone() ? 'Migoo Security Keyboard' : 'ShopeePay Security Keyboard';
   renderPin();
   $('#pinsheet').classList.add('on');
 }
 function closePin(){ $('#pinsheet').classList.remove('on'); state.pinMode = null; }
 function renderPin(){
   const m = state.pinMode;
-  const smsOtp = m === 'card-otp' || m === 'shop-otp' || m === 'shop-pay';
+  const smsOtp = m === 'card-otp' || m === 'reg-otp' || m === 'shop-pay';
   const otp = m === 'pay-otp' || m === 'setup-otp' || smsOtp;
   const TITLES = {
     'setup-otp':'Verify Phone Number',
-    'setup-pin':'Set Monee PIN',
-    'card-otp':'Verify your phone number',
-    'shop-otp':'Verify with Shop Pay',
+    'setup-pin':'Set ShopeePay PIN',
+    'card-otp': shopPay() ? 'Verify with Shop Pay' : 'Verify your phone number',
+    'reg-otp':'Verify your phone number',
     'shop-pay':'Verify with Shop Pay',
-    'card-pin':'Set your Migoo PIN',
-    'pay': standalone() ? 'Enter your Migoo PIN' : 'Enter Monee PIN',
-    'pay-pin':'Enter Monee PIN',
+    'card-pin':'Set your PIN',                 // never-paid users have no PIN yet — they set one
+    'pay': standalone() ? 'Enter your PIN' : 'Enter ShopeePay PIN',
+    'pay-pin':'Enter ShopeePay PIN',
     'pay-otp':'Enter Verification Code',
-    'reg':'Enter Monee PIN'
+    'reg':'Set your PIN'
   };
   $('#pinTitle').textContent = TITLES[m] || '';
   const n = state.pinBuf.length;
   $('#pinBody').innerHTML = otp ? (smsOtp ? `
-    <div class="otp-sub">${m === 'card-otp' ? 'Enter the 6-digit code we just sent by SMS to' : m === 'shop-otp' ? 'Shop Pay sent a 6-digit code by SMS to' : 'To pay with Shop Pay, enter the 6-digit code sent by SMS to'}</div>
+    <div class="otp-sub">${m === 'shop-pay' ? 'To pay with Shop Pay, enter the 6-digit code sent by SMS to' : (m === 'card-otp' && shopPay()) ? 'Shop Pay sent a 6-digit code by SMS to' : 'Enter the 6-digit code we just sent by SMS to'}</div>
     <div class="otp-wa"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6-.2 1.3-.8 2.6-1.7 3.6 1.9-.2 3.7-1 5-2.1 1 .3 2.1.5 3.3.5 5.5 0 10-3.6 10-8S17.5 3 12 3z" fill="#34C759"/></svg> ${esc((state.addr && state.addr.phone) || '+1 (415) 555-6432')}</div>
     <div class="otp-cells">${Array.from({length:6},(_,i)=>`<span class="otp-cell${i===n?' cur':''}">${esc(state.pinBuf[i]||'')}</span>`).join('')}</div>
     <div style="display:flex; align-items:center; justify-content:space-between"><span class="pin-link" style="text-align:left">Didn’t get it?</span><div class="otp-resend" style="margin:0">Resend (60)</div></div>
@@ -2262,19 +2282,22 @@ function renderPin(){
     <div class="otp-cells">${Array.from({length:6},(_,i)=>`<span class="otp-cell${i===n?' cur':''}">${esc(state.pinBuf[i]||'')}</span>`).join('')}</div>
     <div class="otp-resend">Resend (60)</div>`) : `
     <div class="pin-dots">${Array.from({length:6},(_,i)=>`<span class="pin-dot${i<n?' on':''}"></span>`).join('')}</div>
-    ${m === 'setup-pin'
-      ? '<div class="pin-link" style="color:var(--ink-3); cursor:default">This PIN will secure your Monee payments</div>'
+    ${(m === 'setup-pin' || m === 'reg')
+      ? '<div class="pin-link" style="color:var(--ink-3); cursor:default">This PIN will secure your ShopeePay payments</div>'
       : m === 'card-pin'
-      ? '<div class="pin-link" style="color:var(--ink-3); cursor:default">This PIN confirms your Migoo purchases when Face ID isn’t used</div>'
+      ? '<div class="pin-link" style="color:var(--ink-3); cursor:default">This PIN confirms your purchases when Face ID isn’t used</div>'
       : standalone()
-      ? '<div class="pin-link">Forgot your Migoo PIN?</div>'
-      : '<div class="pin-link">Forgot Monee PIN?</div>'}`;
+      ? '<div class="pin-link">Forgot your PIN?</div>'
+      : '<div class="pin-link">Forgot ShopeePay PIN?</div>'}`;
   const oc = $('#otpConfirm');
   if(oc) oc.addEventListener('click', ()=>{
     if(state.pinBuf.length !== 6) return;
     hideSms();
-    if(m === 'card-otp'){ openPin('card-pin'); }                        // code confirmed → set a PIN
-    else if(m === 'shop-otp'){ closePin(); finishCardBind(false); }     // Shop Pay set up — card saved
+    if(m === 'card-otp'){ closePin(); offerFaceID(); }                  // code confirmed → Face ID registration
+    else if(m === 'reg-otp'){                                           // ShopeePay: code confirmed → scan the face
+      closePin(); closeEnrollSheet();
+      state.timers.push(setTimeout(()=>faceID(()=>completeRegistration()), 320));
+    }
     else if(m === 'shop-pay'){ closePin(); payProcessing(); }           // Shop Pay verified — charge
   });
 }
@@ -2309,27 +2332,25 @@ $('#kb').addEventListener('pointerdown', e=>{
       else if(state.pinMode === 'pay'){ closePin(); payProcessing(); }    // checkout paid with PIN
       else if(state.pinMode === 'pay-pin'){ openPin('pay-otp'); }         // no-Face-ID: PIN ok → SMS code
       else if(state.pinMode === 'pay-otp'){ closePin(); payProcessing(); } // no-Face-ID: code ok → paid
-      else if(state.pinMode === 'reg'){                                    // PIN ok → scan the face to register it
-        closePin(); closeEnrollSheet();
-        state.timers.push(setTimeout(()=>faceID(()=>completeRegistration()), 320));
-      }
-      else if(['card-otp','shop-otp','shop-pay'].includes(state.pinMode)){ const b = $('#otpConfirm'); if(b) b.disabled = false; }  // typed the code by hand
-      else if(state.pinMode === 'card-pin'){ closePin(); offerFaceID(); }                          // PIN set → Face ID offer
+      else if(state.pinMode === 'reg'){ startCardVerify('reg-otp'); }      // PIN set → verify the phone by SMS
+      else if(['card-otp','reg-otp','shop-pay'].includes(state.pinMode)){ const b = $('#otpConfirm'); if(b) b.disabled = false; }  // typed the code by hand
+      else if(state.pinMode === 'card-pin'){ startCardVerify('card-otp'); }   // PIN set → verify the phone by SMS
     }, 420));
   }
 });
 $('#pinX').addEventListener('click', ()=>{
   const mode = state.pinMode;
-  const wasPay = ['pay','pay-pin','pay-otp','setup-otp','setup-pin','reg','card-otp','card-pin','shop-otp','shop-pay'].includes(mode);
-  if(['card-otp','shop-otp','shop-pay'].includes(mode)) hideSms();
+  const wasPay = ['pay','pay-pin','pay-otp','setup-otp','setup-pin','reg','reg-otp','card-otp','card-pin','shop-pay'].includes(mode);
+  if(['card-otp','reg-otp','shop-pay'].includes(mode)) hideSms();
   closePin();
-  if(mode !== 'reg') state.paying = false;   // cancelled — countdown resumes ('reg' keeps the enroll sheet open)
+  if(mode !== 'reg' && mode !== 'reg-otp') state.paying = false;   // cancelled — countdown resumes ('reg' keeps the enroll sheet open)
   if(wasPay && window.__orderBtn) window.__orderBtn.disabled = false;   // cancelled checkout — allow retry
 });
 function dismissEnroll(){
-  closeEnrollSheet(); closePin();
+  closeEnrollSheet(); closePin(); hideSms();
   if(state.enrollVariant === 'card'){ finishCardBind(false); return; }   // closing the offer = "Maybe later"
   state.paying = false;
+  const ob = window.__orderBtn; if(ob && !paid()) ob.disabled = false;   // registration abandoned — Pay now is tappable again
 }
 $('#enX').addEventListener('click', dismissEnroll);
 $('#enDim').addEventListener('click', dismissEnroll);
@@ -2420,7 +2441,6 @@ function issueOrderCard(){
         openStripeBind();
         return;
       }
-      if(shopPay()){ startCardVerify('shop-pay'); return; }   // Shop Pay: SMS code, then charge
       if(state.spEnrolled) faceID(()=>payProcessing());
       else openPin('pay');
       return;
@@ -2977,10 +2997,10 @@ const SPM_PAY = {
   bni:    {id:'bni',     logo:'bank',    label:'Bank BNI',       payName:'Bank BNI'},
   bri:    {id:'bri',     logo:'bank',    label:'Bank BRI',       payName:'Bank BRI'},
   qris:   {id:'qris',    logo:'qris',    label:'QRIS',           payName:'QRIS'},
-  spl:    {id:'spl',     logo:'spaylater', label:'Monee PayLater',    payName:'Monee PayLater'},
-  spl3:   {id:'spl3',    logo:'spaylater', label:'Monee PayLater · 3×', payName:'Monee PayLater'},
-  spl6:   {id:'spl6',    logo:'spaylater', label:'Monee PayLater · 6×', payName:'Monee PayLater'},
-  spl12:  {id:'spl12',   logo:'spaylater', label:'Monee PayLater · 12×', payName:'Monee PayLater'}
+  spl:    {id:'spl',     logo:'spaylater', label:'SPayLater',    payName:'SPayLater'},
+  spl3:   {id:'spl3',    logo:'spaylater', label:'SPayLater · 3×', payName:'SPayLater'},
+  spl6:   {id:'spl6',    logo:'spaylater', label:'SPayLater · 6×', payName:'SPayLater'},
+  spl12:  {id:'spl12',   logo:'spaylater', label:'SPayLater · 12×', payName:'SPayLater'}
 };
 const bankTile = (bg, txt)=>`<span class="spm-bt" style="background:${bg}">${txt}</span>`;
 function openSPM(){
@@ -3025,13 +3045,13 @@ function renderSPM(){
     <div class="as-card">
       <div class="spm-row" style="border-bottom:0; cursor:default">
         ${payLogo('spaylater',26,19)}
-        <span class="nm">Monee PayLater<span class="q">?</span><span class="sub">Activate now to get 50K Discount</span></span>
+        <span class="nm">SPayLater<span class="q">?</span><span class="sub">Activate now to get 50K Discount</span></span>
         <button class="spm-obtn">Resubmit</button>
       </div>
       <div class="spm-promo-strip">
-        <div class="spm-promo" style="background:#F0592A"><span class="pct">%</span><div class="h">DISKON 99%</div><div class="s">up to \$5 · min. spend \$0</div><span class="tag" style="color:#F0592A">Monee PayLater</span></div>
+        <div class="spm-promo" style="background:#F0592A"><span class="pct">%</span><div class="h">DISKON 99%</div><div class="s">up to \$5 · min. spend \$0</div><span class="tag" style="color:#F0592A">SPayLater</span></div>
       </div>
-      <div class="spm-plan" data-sel="spl"><div class="l"><div class="n">Monee PayLater</div><div class="g">\$0 today</div><div class="off">Extra 99% OFF</div></div><div class="r"><div class="a">${esc(orderAmounts().total)}</div><div class="i">0% Interest</div>${tick('spl')}</div></div>
+      <div class="spm-plan" data-sel="spl"><div class="l"><div class="n">SPayLater</div><div class="g">\$0 today</div><div class="off">Extra 99% OFF</div></div><div class="r"><div class="a">${esc(orderAmounts().total)}</div><div class="i">0% Interest</div>${tick('spl')}</div></div>
       <div class="spm-plan" data-sel="spl3"><div class="l"><div class="n">Instalment 3X</div><div class="off">Extra 99% OFF</div></div><div class="r"><div class="a">${inst(3)}/month</div><div class="i g">2.45% interest/month</div>${tick('spl3')}</div></div>
       <div class="spm-plan" data-sel="spl6"><div class="l"><div class="n">Instalment 6X</div><div class="off">Extra 99% OFF</div></div><div class="r"><div class="a">${inst(6)}/month</div><div class="i g">2.45% interest/month</div>${tick('spl6')}</div></div>
       <div class="spm-plan" data-sel="spl12" style="border-bottom:0"><div class="l"><div class="n">Instalment 12X</div><div class="off">Extra 99% OFF</div></div><div class="r"><div class="a">${inst(12)}/month</div><div class="i g">2.45% interest/month</div>${tick('spl12')}</div></div>
@@ -3040,8 +3060,8 @@ function renderSPM(){
       <div class="spm-row dis"><span style="width:26px">💵</span><span class="nm">Cash on Delivery<span class="q">?</span></span></div>
       <div class="spm-row dis"><span style="width:26px">📦</span><span class="nm">COD - Cek Dulu<span class="q">?</span><span class="spm-badge pale">New</span></span></div>
       <div class="spm-row dis" style="border-bottom:0">
-        ${payLogo('monee',26,19)}
-        <span class="nm">Monee Balance <span style="color:var(--ink-3); font-weight:400">(\$7.06)</span><span class="sub">Cheaper final price!</span></span>
+        ${payLogo('shopeepay',26,19)}
+        <span class="nm">ShopeePay Balance <span style="color:var(--ink-3); font-weight:400">(\$7.06)</span><span class="sub">Cheaper final price!</span></span>
         <button class="spm-obtn" style="opacity:1">Top Up</button>
       </div>
       <div class="spm-promo-strip">
@@ -3654,12 +3674,14 @@ const FLOW_NOAG = [S_LIST, S_REQ_NA, S_HANDOFF, S_HDONE];
 function curFlow(){ return state.agentic ? FLOWS[state.userType] : FLOW_NOAG; }
 /* three orthogonal switches on top of User / Address:
    region   — 'us' adds sales tax at checkout; 'row' (non-US) prices are tax-inclusive
-   supplier — 'stripe' bank card + Migoo PIN / Face ID; 'monee' wallet registered with
-              Face ID (PIN-confirmed) + Monee Payment Method sheet; 'shopify' = Shop Pay,
+   supplier — 'stripe' bank card + Migoo PIN / Face ID; 'monee' (non-US) = the orange
+              ShopeePay wallet: Face ID registration (PIN-confirmed) + Shopee Payment Method
+              sheet; 'shopify' = Shop Pay,
               card saved once and every payment verified with an SMS code
    platform — 'migoo' standalone shell; 'shopee' migoo inside the Shopee frame */
-/* Monee is a wallet only outside the US (Face ID registration sheet, Monee PIN, Monee
-   Payment Method sheet); in the US it processes cards exactly like Stripe */
+/* outside the US, paying through Monee means the ShopeePay wallet (orange Face ID
+   registration sheet, ShopeePay PIN, Shopee Payment Method sheet); in the US Monee
+   processes cards exactly like Stripe */
 function moneeWallet(){ return state.supplier === 'monee' && state.region !== 'us'; }
 function standalone(){ return !moneeWallet(); }                 // card-style checkout
 function shopPay(){ return state.supplier === 'shopify'; }
@@ -3718,8 +3740,8 @@ function clearShell(){
   state.paying = false;
   state.addr = null;
   state.pay = moneeWallet()
-    ? (newUser() ? {id:'sp-new', logo:'monee', label:'Set up Monee', payName:'Monee'}
-                 : {id:'sp6789', logo:'monee', label:'···· 6789', payName:'Monee'})
+    ? (newUser() ? {id:'sp-new', logo:'shopeepay', label:'Set up ShopeePay', payName:'ShopeePay'}
+                 : {id:'sp6789', logo:'shopeepay', label:'···· 6789', payName:'ShopeePay'})
     : shopPay()
     ? (newUser() ? {id:'st-none', logo:'shoppay', label:'Set up Shop Pay', payName:'Shop Pay'}
                  : {id:'sh6789', logo:'shoppay', label:'···· 6789', payName:'Shop Pay ···· 6789'})
@@ -3765,8 +3787,11 @@ function gotoStep(i){
 }
 
 /* ---- dev bar ---- */
+/* the Steps list was dropped from the dev bar; these stay as no-ops so the
+   callers (path switches, next/advance/gotoStep) need no changes */
 function buildStepList(){
-  const list = $('#stepList'); list.innerHTML='';
+  const list = $('#stepList'); if(!list) return;
+  list.innerHTML='';
   curFlow().forEach((s,i)=>{
     const b = el('button', null, `<b>${i+1}</b><span>${esc(s.label)}</span>`);
     b.addEventListener('click', ()=>gotoStep(i));
@@ -3774,8 +3799,19 @@ function buildStepList(){
   });
 }
 function highlightStep(){
-  $('#stepList').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===state.step));
+  const list = $('#stepList'); if(!list) return;
+  list.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===state.step));
 }
+document.querySelectorAll('.devbar [data-tip]').forEach(b=>{
+  b.addEventListener('mouseenter', ()=>{
+    const tip = $('#devTip');
+    tip.textContent = b.dataset.tip;
+    tip.style.top = (b.offsetTop + b.offsetHeight + 8) + 'px';   // right under the hovered option
+    tip.style.setProperty('--ax', (b.offsetLeft + b.offsetWidth / 2 - 12) + 'px');
+    tip.classList.add('on');
+  });
+  b.addEventListener('mouseleave', ()=>$('#devTip').classList.remove('on'));
+});
 /* region gates the other two switches: non-US only has Monee; US is never inside Shopee */
 function syncDevbar(){
   const us = state.region === 'us';
