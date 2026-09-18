@@ -983,12 +983,12 @@ body{
 .devbar .seg button:disabled{opacity:.38; cursor:not-allowed}
 /* dev hint bubble: sits beside the phone (never over it), pointing at the shell */
 .devhint{
-  display:none; flex:0 0 224px; width:224px; align-self:flex-start; margin-top:150px; position:relative;
+  /* the column is always reserved, so the phone never moves when the bubble appears */
+  visibility:hidden; flex:0 0 224px; width:224px; align-self:flex-start; margin-top:150px; position:relative;
   background:#fff; border-radius:14px; padding:14px 16px;
   box-shadow:0 10px 30px rgba(0,0,0,.12); font-size:12.5px; line-height:1.5; color:var(--ink-2);
-  animation:dhIn .3s ease both;
 }
-.devhint.on{display:block}
+.devhint.on{visibility:visible; animation:dhIn .3s ease both}
 @keyframes dhIn{from{opacity:0; transform:translateX(8px)} to{opacity:1; transform:none}}
 .devhint::after{content:''; position:absolute; right:-8px; top:26px; border:8px solid transparent; border-right:0; border-left-color:#fff}
 .devhint .dh-tag{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#0BA37F; background:#E6F6F1; border-radius:6px; padding:2px 7px; margin-bottom:8px}
