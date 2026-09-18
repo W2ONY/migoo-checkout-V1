@@ -994,16 +994,20 @@ body{
 .devbar .seg button.on{background:var(--blue); border-color:var(--blue); color:#fff}
 .devbar .seg button:disabled{opacity:.38; cursor:not-allowed}
 /* dev hint bubble: sits beside the phone (never over it), pointing at the shell */
-.devhint{
-  /* the column is always reserved, so the phone never moves when the bubble appears */
-  visibility:hidden; flex:0 0 224px; width:224px; align-self:flex-start; margin-top:150px; position:relative;
-  background:#fff; border-radius:14px; padding:14px 16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.12); font-size:12.5px; line-height:1.5; color:var(--ink-2);
+.devhints{
+  /* the column is always reserved, so the phone never moves when a bubble appears */
+  flex:0 0 224px; width:224px; align-self:flex-start; margin-top:150px;
+  display:flex; flex-direction:column; gap:14px;
 }
-.devhint.on{visibility:visible; animation:dhIn .3s ease both}
+.devhint{
+  position:relative; background:#fff; border-radius:14px; padding:14px 16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12); font-size:12.5px; line-height:1.5; color:var(--ink-2);
+  animation:dhIn .3s ease both;
+}
 @keyframes dhIn{from{opacity:0; transform:translateX(8px)} to{opacity:1; transform:none}}
 .devhint::after{content:''; position:absolute; right:-8px; top:26px; border:8px solid transparent; border-right:0; border-left-color:#fff}
 .devhint .dh-tag{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#0BA37F; background:#E6F6F1; border-radius:6px; padding:2px 7px; margin-bottom:8px}
+.devhint .dh-tag.orange{color:#D8431F; background:#FDEEE9}
 .devhint b{color:var(--ink)}
 .devbar .steps{display:flex; flex-direction:column; gap:5px; margin-top:8px}
 .devbar .steps button{
@@ -1022,7 +1026,7 @@ body{
 </head>
 <body>
 
-<div class="devhint" id="devHint"><span class="dh-tag">Monee · US</span><div id="devHintText"></div></div>
+<div class="devhints" id="devHints"></div>
 <div class="phone" id="phone">
   <!-- status bar -->
   <div class="statusbar">
@@ -3489,7 +3493,7 @@ const S_CARD = { label:'Order card · pay CTA', run(){
       if(!state.addr) acceptAddr(proposedAddr(), state.addrMode === 'nogps' ? 'typed' : state.addrMode);
       issueOrderCard();
       if(state.region === 'us' && state.supplier === 'monee'){
-        showDevHint('In the US, Monee doesn’t process cards itself — it plugs in a <b>third-party PSP such as Stripe</b>. This order’s <b>Pay now</b> runs on that PSP rail, so the card form, SMS code, Migoo PIN and Face ID here are the same as on the Stripe path.');
+        showDevHint('monee-us', 'Monee · US', 'In the US, Monee doesn’t process cards itself — it plugs in a <b>third-party PSP such as Stripe</b>. This order’s <b>Pay now</b> runs on that PSP rail, so the card form, SMS code, Migoo PIN and Face ID here are the same as on the Stripe path.');
       }
   }};
 const S_PAID = { label:'Payment success (chat)', run(){
@@ -3507,6 +3511,10 @@ const S_PAID = { label:'Payment success (chat)', run(){
         refreshRow('pay', `<span class="pm-chip">${payLogo(state.pay.logo,26,18)}<span>${esc(state.pay.label)}</span></span>`);
       }
       flipToReceipt();             // card becomes the receipt (Purchase Complete + Customer Support)
+      if(!inShopee() && state.orderStore === 'Shopee'){
+        showDevHint('link-shopee', 'Migoo · Shopee order',
+          'This Shopee item was bought from the <b>Migoo</b> channel, so the order needs a Shopee account behind it: either the user <b>links their Shopee account</b>, or Migoo <b>silently registers one</b> for them once the order is placed.', 'orange');
+      }
       if(!onCardSetup()) aiMsg([{t:'p', text:`✅ Payment successful! ${orderAmounts().total} paid with ${state.pay.payName}.`}]);
       then(()=>showMail(), 600);
       then(()=>hideMail(), 3100);
@@ -3765,11 +3773,14 @@ function clearShell(){
 }
 
 /* dev hint: an extra column to the left of the phone, shown only on the paths that need it */
-function showDevHint(html){
-  $('#devHintText').innerHTML = html;
-  $('#devHint').classList.add('on');
+function showDevHint(id, tag, html, tone){
+  if($('#devHints').querySelector(`[data-hint="${id}"]`)) return;        // already showing
+  const n = el('div','devhint', `<span class="dh-tag${tone ? ' ' + tone : ''}">${esc(tag)}</span><div>${html}</div>`);
+  n.dataset.hint = id;
+  if(instant) n.style.animation = 'none';
+  $('#devHints').appendChild(n);
 }
-function hideDevHint(){ $('#devHint').classList.remove('on'); }
+function hideDevHint(){ $('#devHints').innerHTML = ''; }
 function reset(){
   clearShell();
   state.step = 0;
